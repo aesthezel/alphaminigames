@@ -6,25 +6,34 @@ namespace AES
 {
     public class SnakeGM : MonoBehaviour
     {
+        public Transform cameraHolder;
+
         public int maxHeight = 15;
         public int maxWidth = 17;
 
         public Color col1; // Color of grid "a"
         public Color col2; // Color of grid "b"
-
         public Color playerColor; // Player color
-        GameObject playerObj;
-        SnakeNode playerNode;
+        public Color energyColor;
 
-        public Transform cameraHolder;
-
-        GameObject mapObj;
         SpriteRenderer mapRenderer;
 
+        GameObject mapObj;
+        GameObject playerObj;
+        GameObject energyObj;
+
+        SnakeNode playerNode;
+        SnakeNode energyNode;
+
         SnakeNode[,] grid;
+        List<SnakeNode> theNodes = new List<SnakeNode>();
 
         bool up, down, left, right;
-        bool playerMoving;
+        // bool playerMoving; // DEPRECATED
+
+        public float moveRate = 0.5f;
+        float timer;
+
         Dir curDir;
         public enum Dir
         {
@@ -37,6 +46,8 @@ namespace AES
             DrawMap();
             SetPlayer();
             SetCamera();
+            SpawnEnergy();
+            curDir = Dir.right;
         }
 
         void DrawMap()
@@ -61,6 +72,8 @@ namespace AES
                         mapPos = pp
                     };
                     grid[a, b] = n;
+
+                    theNodes.Add(n);
 
                     #region Visual 2x2
                     if (a % 2 != 0)
@@ -108,6 +121,14 @@ namespace AES
 
         }
 
+        void SpawnEnergy()
+        {
+            energyObj = new GameObject("Energy");
+            SpriteRenderer energyRenderer = energyObj.AddComponent<SpriteRenderer>();
+            energyRenderer.sprite = CreateSprite(energyColor);
+            RandomEnergy();
+        }
+
         void SetCamera()
         {
             SnakeNode n = GetNode(maxWidth / 2, maxHeight / 2);
@@ -122,7 +143,13 @@ namespace AES
         {
             GetInput();
             SetDir();
-            Movement();
+
+            timer += Time.deltaTime;
+            if(timer > moveRate) // Automatic movement by direction
+            {
+                timer = 0;
+                Movement();
+            }
         }
 
         void GetInput()
@@ -138,31 +165,31 @@ namespace AES
             if(up)
             {
                 curDir = Dir.up;
-                playerMoving = true;
+                // playerMoving = true;
             }
             else if(down)
             {
                 curDir = Dir.down;
-                playerMoving = true;
+                // playerMoving = true;
             }
             else if(left)
             {
                 curDir = Dir.left;
-                playerMoving = true;
+                // playerMoving = true;
             }
             else if(right)
             {
                 curDir = Dir.right;
-                playerMoving = true;
+                // playerMoving = true;
             }
         }
 
         void Movement()
         {
-            if (!playerMoving)
-                return;
+            // if (!playerMoving)
+            //     return;
 
-            playerMoving = false;
+            // playerMoving = false;
 
             int x = 0;
             int y = 0;
@@ -186,12 +213,33 @@ namespace AES
             SnakeNode targetNode = GetNode(playerNode.x + x, playerNode.y + y);
             if (targetNode == null)
             {
-                //GO
+                // Lose
             }
             else
             {
+                bool isScore = false;
+
+                if(targetNode == energyNode)
+                {
+                    isScore = true;
+                }
+
+                theNodes.Remove(playerNode);
                 playerObj.transform.position = targetNode.mapPos;
                 playerNode = targetNode;
+                theNodes.Add(playerNode);
+
+                if (isScore) // Tail
+                {
+                    if (theNodes.Count > 0)
+                    {
+                        RandomEnergy();
+                    }
+                    else
+                    {
+                        // Won
+                    }
+                }
             }
         }
         #endregion
@@ -213,6 +261,16 @@ namespace AES
             txt.filterMode = FilterMode.Point;
             Rect rect = new Rect(0, 0, 1, 1);
             return Sprite.Create(txt, rect, Vector2.zero, 1, 0, SpriteMeshType.FullRect);
+        }
+        #endregion
+
+        #region Env
+        void RandomEnergy()
+        {
+            int r = Random.Range(0, theNodes.Count);
+            SnakeNode n = theNodes[r];
+            energyObj.transform.position = n.mapPos;
+            energyNode = n;
         }
         #endregion
     }

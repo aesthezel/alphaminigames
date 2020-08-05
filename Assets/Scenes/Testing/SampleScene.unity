@@ -356,12 +356,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0bfe4f79b7029464ea02877a73f890f3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  cameraHolder: {fileID: 1158110966}
   maxHeight: 15
   maxWidth: 15
   col1: {r: 0.19339621, g: 1, b: 0.9765479, a: 1}
   col2: {r: 0.21560162, g: 0.8018868, b: 0.59221196, a: 1}
   playerColor: {r: 0.9622642, g: 0.54246056, b: 0.13163051, a: 1}
-  cameraHolder: {fileID: 1158110966}
+  energyColor: {r: 1, g: 0, b: 0, a: 1}
+  moveRate: 0.5
 --- !u!4 &1445926161
 Transform:
   m_ObjectHideFlags: 0
