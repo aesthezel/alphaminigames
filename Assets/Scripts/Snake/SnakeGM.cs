@@ -10,6 +10,7 @@ namespace AES
 
         public int maxHeight = 15;
         public int maxWidth = 17;
+        int tailPoint;
 
         public Color col1; // Color of grid "a"
         public Color col2; // Color of grid "b"
@@ -26,6 +27,7 @@ namespace AES
         GameObject energyObj;
 
         SnakeNode playerNode;
+        SnakeNode prevPlayerNode;
         SnakeNode energyNode;
 
         SnakeNode[,] grid;
@@ -39,7 +41,8 @@ namespace AES
         public float moveRate = 0.5f;
         float timer;
 
-        Dir curDir;
+        Dir targetDir;
+        Dir currentDir;
         public enum Dir
         {
             up, down, left, right
@@ -52,7 +55,7 @@ namespace AES
             SetPlayer();
             SetCamera();
             SpawnEnergy();
-            curDir = Dir.right;
+            targetDir = Dir.right;
         }
 
         void DrawMap()
@@ -121,9 +124,10 @@ namespace AES
             playerSprite = CreateSprite(playerColor);
             playerRender.sprite = playerSprite;
             playerRender.sortingOrder = 1;
-
             playerNode = GetNode(3, 3);
-            playerObj.transform.position = playerNode.mapPos;
+
+            LocatePlayerObject(playerObj, playerNode.mapPos);
+            playerObj.transform.localScale = Vector3.one * 1.2f;
 
             playerTail = new GameObject("Tail");
 
@@ -134,6 +138,7 @@ namespace AES
             energyObj = new GameObject("Energy");
             SpriteRenderer energyRenderer = energyObj.AddComponent<SpriteRenderer>();
             energyRenderer.sprite = CreateSprite(energyColor);
+            energyRenderer.sortingOrder = 1; // FIX: Spawn in the same layer of player
             RandomEnergy();
         }
 
@@ -150,12 +155,13 @@ namespace AES
         private void Update() 
         {
             GetInput();
-            SetDir();
+            SetPlayerDir();
 
             timer += Time.deltaTime;
             if(timer > moveRate) // Automatic movement by direction
             {
                 timer = 0;
+                currentDir = targetDir;
                 Movement();
             }
         }
@@ -168,28 +174,37 @@ namespace AES
             right = Input.GetButtonDown("Right");
         }
 
-        void SetDir()
+        void SetPlayerDir()
         {
             if(up)
             {
-                curDir = Dir.up;
+                SetDir(Dir.up);
                 // playerMoving = true;
             }
             else if(down)
             {
-                curDir = Dir.down;
+                SetDir(Dir.down);
                 // playerMoving = true;
             }
             else if(left)
             {
-                curDir = Dir.left;
+                SetDir(Dir.left);
                 // playerMoving = true;
             }
             else if(right)
             {
-                curDir = Dir.right;
+                SetDir(Dir.right);
                 // playerMoving = true;
             }
+        }
+
+        void SetDir(Dir d)
+        {
+            if(!isOpp(d))
+            {
+                targetDir = d;
+            }
+
         }
 
         void Movement()
@@ -202,7 +217,7 @@ namespace AES
             int x = 0;
             int y = 0;
 
-            switch (curDir)
+            switch (currentDir)
             {
                 case Dir.up:
                     y = 1;
@@ -225,37 +240,45 @@ namespace AES
             }
             else
             {
-                bool isScore = false;
-
-                if(targetNode == energyNode)
+                if(isBitedByYourself(targetNode))
                 {
-                    isScore = true;
+                    // Lose
                 }
-
-                SnakeNode prevNode = playerNode;
-                theNodes.Add(prevNode);
-
-                if (isScore)
+                else
                 {
-                    snakeTail.Add(CreateTailNode(prevNode.x, prevNode.y));
-                    theNodes.Remove(prevNode);
-                }
+                    bool isScore = false;
 
-                MoveTail();
-
-                playerObj.transform.position = targetNode.mapPos;
-                playerNode = targetNode;
-                theNodes.Remove(playerNode);
-
-                if (isScore)
-                {
-                    if (theNodes.Count > 0)
+                    if(targetNode == energyNode)
                     {
-                        RandomEnergy();
+                        isScore = true;
                     }
-                    else
+
+                    SnakeNode prevNode = playerNode;
+                    theNodes.Add(prevNode);
+
+                    if (isScore)
                     {
-                        // Won
+                        tailPoint++;
+                        snakeTail.Add(CreateTailNode(prevNode.x, prevNode.y));
+                        theNodes.Remove(prevNode);
+                    }
+
+                    MoveTail();
+
+                    LocatePlayerObject(playerObj, targetNode.mapPos);
+                    playerNode = targetNode;
+                    theNodes.Remove(playerNode);
+
+                    if (isScore)
+                    {
+                        if (theNodes.Count > 0)
+                        {
+                            RandomEnergy();
+                        }
+                        else
+                        {
+                            // Won
+                        }
                     }
                 }
             }
@@ -283,8 +306,66 @@ namespace AES
                 }
 
                 theNodes.Remove(s.node);
-                s.superObj.transform.position = s.node.mapPos;
+                LocatePlayerObject(s.superObj, s.node.mapPos);
             }
+        }
+        #endregion
+
+        #region Env
+        void LocatePlayerObject(GameObject obj, Vector3 loc)
+        {
+            loc += Vector3.one * .5f;
+            obj.transform.position = loc;
+        }
+
+        void RandomEnergy()
+        {
+            int r = Random.Range(0, theNodes.Count);
+            SnakeNode n = theNodes[r];
+            LocatePlayerObject(energyObj, n.mapPos);
+            energyNode = n;
+        }
+        #endregion
+
+        #region Conditionals
+        bool isOpp(Dir d)
+        {
+            switch (d)
+            {
+                default:
+                case Dir.up:
+                    if(currentDir == Dir.down)
+                        return true;
+                    else
+                        return false;
+                case Dir.down:
+                    if(currentDir == Dir.up)
+                        return true;
+                    else
+                        return false;
+                case Dir.left:
+                    if(currentDir == Dir.right)
+                        return true;
+                    else
+                        return false;
+                case Dir.right:
+                    if(currentDir == Dir.left)
+                        return true;
+                    else
+                        return false;
+            }
+        }
+
+        bool isBitedByYourself(SnakeNode n)
+        {
+            for (int t = 0; t < snakeTail.Count; t++)
+            {
+                if(snakeTail[t].node == n)
+                {
+                    return true;
+                }
+            }
+            return false;
         }
         #endregion
 
@@ -304,31 +385,22 @@ namespace AES
             txt.Apply();
             txt.filterMode = FilterMode.Point;
             Rect rect = new Rect(0, 0, 1, 1);
-            return Sprite.Create(txt, rect, Vector2.zero, 1, 0, SpriteMeshType.FullRect);
+            return Sprite.Create(txt, rect, Vector2.one * .5f, 1, 0, SpriteMeshType.FullRect);
         }
 
         SnakeSpecial CreateTailNode(int x, int y)
         {
             SnakeSpecial s = new SnakeSpecial();
             s.node = GetNode(x, y);
-            s.superObj = new GameObject();
+            s.superObj = new GameObject("Nested Tail " + tailPoint);
             s.superObj.transform.parent = playerTail.transform;
             s.superObj.transform.position = s.node.mapPos;
+            s.superObj.transform.localScale = Vector3.one * .95f;
             SpriteRenderer r = s.superObj.AddComponent<SpriteRenderer>();
             r.sprite = playerSprite;
             r.sortingOrder = 1; // Tail spawn backward the player
 
             return s;
-        }
-        #endregion
-
-        #region Env
-        void RandomEnergy()
-        {
-            int r = Random.Range(0, theNodes.Count);
-            SnakeNode n = theNodes[r];
-            energyObj.transform.position = n.mapPos;
-            energyNode = n;
         }
         #endregion
     }
