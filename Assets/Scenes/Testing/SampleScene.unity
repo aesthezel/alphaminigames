@@ -266,20 +266,20 @@ Camera:
   far clip plane: 1000
   field of view: 8
   orthographic: 1
-  orthographic size: 8
+  orthographic size: 9
   m_Depth: -1
   m_CullingMask:
     serializedVersion: 2
     m_Bits: 4294967295
-  m_RenderingPath: -1
+  m_RenderingPath: 1
   m_TargetTexture: {fileID: 0}
   m_TargetDisplay: 0
   m_TargetEye: 3
-  m_HDR: 1
-  m_AllowMSAA: 1
+  m_HDR: 0
+  m_AllowMSAA: 0
   m_AllowDynamicResolution: 0
   m_ForceIntoRT: 0
-  m_OcclusionCulling: 1
+  m_OcclusionCulling: 0
   m_StereoConvergence: 10
   m_StereoSeparation: 0.022
 --- !u!4 &963194228
@@ -363,7 +363,7 @@ MonoBehaviour:
   col2: {r: 0.21560162, g: 0.8018868, b: 0.59221196, a: 1}
   playerColor: {r: 0.9622642, g: 0.54246056, b: 0.13163051, a: 1}
   energyColor: {r: 1, g: 0, b: 0, a: 1}
-  moveRate: 0.5
+  moveRate: 0.1
 --- !u!4 &1445926161
 Transform:
   m_ObjectHideFlags: 0

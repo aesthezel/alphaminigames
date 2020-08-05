@@ -18,15 +18,20 @@ namespace AES
 
         SpriteRenderer mapRenderer;
 
+        Sprite playerSprite;
+
         GameObject mapObj;
         GameObject playerObj;
+        GameObject playerTail;
         GameObject energyObj;
 
         SnakeNode playerNode;
         SnakeNode energyNode;
 
         SnakeNode[,] grid;
+
         List<SnakeNode> theNodes = new List<SnakeNode>();
+        List<SnakeSpecial> snakeTail = new List<SnakeSpecial>();
 
         bool up, down, left, right;
         // bool playerMoving; // DEPRECATED
@@ -113,11 +118,14 @@ namespace AES
         {
             playerObj = new GameObject("Player");
             SpriteRenderer playerRender = playerObj.AddComponent<SpriteRenderer>();
-            playerRender.sprite = CreateSprite(playerColor);
+            playerSprite = CreateSprite(playerColor);
+            playerRender.sprite = playerSprite;
             playerRender.sortingOrder = 1;
 
             playerNode = GetNode(3, 3);
             playerObj.transform.position = playerNode.mapPos;
+
+            playerTail = new GameObject("Tail");
 
         }
 
@@ -224,12 +232,22 @@ namespace AES
                     isScore = true;
                 }
 
-                theNodes.Remove(playerNode);
+                SnakeNode prevNode = playerNode;
+                theNodes.Add(prevNode);
+
+                if (isScore)
+                {
+                    snakeTail.Add(CreateTailNode(prevNode.x, prevNode.y));
+                    theNodes.Remove(prevNode);
+                }
+
+                MoveTail();
+
                 playerObj.transform.position = targetNode.mapPos;
                 playerNode = targetNode;
-                theNodes.Add(playerNode);
+                theNodes.Remove(playerNode);
 
-                if (isScore) // Tail
+                if (isScore)
                 {
                     if (theNodes.Count > 0)
                     {
@@ -240,6 +258,32 @@ namespace AES
                         // Won
                     }
                 }
+            }
+        }
+
+        void MoveTail()
+        {
+            SnakeNode prevNode = null;
+
+            for (int t = 0; t < snakeTail.Count; t++)
+            {
+                SnakeSpecial s = snakeTail[t];
+                theNodes.Add(s.node);
+
+                if (t == 0)
+                {
+                    prevNode = s.node;
+                    s.node = playerNode;
+                }
+                else
+                {
+                    SnakeNode prevAlt = s.node;
+                    s.node = prevNode;
+                    prevNode = prevAlt;
+                }
+
+                theNodes.Remove(s.node);
+                s.superObj.transform.position = s.node.mapPos;
             }
         }
         #endregion
@@ -261,6 +305,20 @@ namespace AES
             txt.filterMode = FilterMode.Point;
             Rect rect = new Rect(0, 0, 1, 1);
             return Sprite.Create(txt, rect, Vector2.zero, 1, 0, SpriteMeshType.FullRect);
+        }
+
+        SnakeSpecial CreateTailNode(int x, int y)
+        {
+            SnakeSpecial s = new SnakeSpecial();
+            s.node = GetNode(x, y);
+            s.superObj = new GameObject();
+            s.superObj.transform.parent = playerTail.transform;
+            s.superObj.transform.position = s.node.mapPos;
+            SpriteRenderer r = s.superObj.AddComponent<SpriteRenderer>();
+            r.sprite = playerSprite;
+            r.sortingOrder = 1; // Tail spawn backward the player
+
+            return s;
         }
         #endregion
 
