@@ -27,6 +27,14 @@ namespace AlphaMiniGames
                     ""expectedControlType"": ""Button"",
                     ""processors"": """",
                     ""interactions"": """"
+                },
+                {
+                    ""name"": ""Accelerate"",
+                    ""type"": ""Button"",
+                    ""id"": ""1c16a419-837e-4a78-8cd4-8cccfa879f2e"",
+                    ""expectedControlType"": ""Button"",
+                    ""processors"": """",
+                    ""interactions"": """"
                 }
             ],
             ""bindings"": [
@@ -64,26 +72,37 @@ namespace AlphaMiniGames
                     ""isPartOfComposite"": true
                 },
                 {
-                    ""name"": """",
-                    ""id"": ""8639795e-6824-43fd-aaed-8e94483b8163"",
-                    ""path"": ""<Keyboard>/w"",
+                    ""name"": ""Vertical"",
+                    ""id"": ""5622c965-94ef-4b14-97ab-91d96b6a8ff0"",
+                    ""path"": ""1DAxis"",
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": """",
-                    ""action"": ""Move"",
-                    ""isComposite"": false,
+                    ""action"": ""Accelerate"",
+                    ""isComposite"": true,
                     ""isPartOfComposite"": false
                 },
                 {
-                    ""name"": """",
-                    ""id"": ""1b2139e6-c5af-49be-8748-075877ef8dc1"",
+                    ""name"": ""negative"",
+                    ""id"": ""2fca247c-c680-4b3e-ade8-fa4c25e5a585"",
                     ""path"": ""<Keyboard>/s"",
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": """",
-                    ""action"": ""Move"",
+                    ""action"": ""Accelerate"",
                     ""isComposite"": false,
-                    ""isPartOfComposite"": false
+                    ""isPartOfComposite"": true
+                },
+                {
+                    ""name"": ""positive"",
+                    ""id"": ""1edd8a0f-2b41-4738-849c-271409f25f70"",
+                    ""path"": ""<Keyboard>/w"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Accelerate"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": true
                 }
             ]
         }
@@ -93,6 +112,7 @@ namespace AlphaMiniGames
             // Vehicle
             m_Vehicle = asset.FindActionMap("Vehicle", throwIfNotFound: true);
             m_Vehicle_Move = m_Vehicle.FindAction("Move", throwIfNotFound: true);
+            m_Vehicle_Accelerate = m_Vehicle.FindAction("Accelerate", throwIfNotFound: true);
         }
 
         public void Dispose()
@@ -143,11 +163,13 @@ namespace AlphaMiniGames
         private readonly InputActionMap m_Vehicle;
         private IVehicleActions m_VehicleActionsCallbackInterface;
         private readonly InputAction m_Vehicle_Move;
+        private readonly InputAction m_Vehicle_Accelerate;
         public struct VehicleActions
         {
             private @InputGame m_Wrapper;
             public VehicleActions(@InputGame wrapper) { m_Wrapper = wrapper; }
             public InputAction @Move => m_Wrapper.m_Vehicle_Move;
+            public InputAction @Accelerate => m_Wrapper.m_Vehicle_Accelerate;
             public InputActionMap Get() { return m_Wrapper.m_Vehicle; }
             public void Enable() { Get().Enable(); }
             public void Disable() { Get().Disable(); }
@@ -160,6 +182,9 @@ namespace AlphaMiniGames
                     @Move.started -= m_Wrapper.m_VehicleActionsCallbackInterface.OnMove;
                     @Move.performed -= m_Wrapper.m_VehicleActionsCallbackInterface.OnMove;
                     @Move.canceled -= m_Wrapper.m_VehicleActionsCallbackInterface.OnMove;
+                    @Accelerate.started -= m_Wrapper.m_VehicleActionsCallbackInterface.OnAccelerate;
+                    @Accelerate.performed -= m_Wrapper.m_VehicleActionsCallbackInterface.OnAccelerate;
+                    @Accelerate.canceled -= m_Wrapper.m_VehicleActionsCallbackInterface.OnAccelerate;
                 }
                 m_Wrapper.m_VehicleActionsCallbackInterface = instance;
                 if (instance != null)
@@ -167,6 +192,9 @@ namespace AlphaMiniGames
                     @Move.started += instance.OnMove;
                     @Move.performed += instance.OnMove;
                     @Move.canceled += instance.OnMove;
+                    @Accelerate.started += instance.OnAccelerate;
+                    @Accelerate.performed += instance.OnAccelerate;
+                    @Accelerate.canceled += instance.OnAccelerate;
                 }
             }
         }
@@ -174,6 +202,7 @@ namespace AlphaMiniGames
         public interface IVehicleActions
         {
             void OnMove(InputAction.CallbackContext context);
+            void OnAccelerate(InputAction.CallbackContext context);
         }
     }
 }

@@ -10,13 +10,14 @@ namespace AlphaMiniGames
         private InputGame controls;
 
         private float onMoveValue;
+        private float onAccelerateValue;
 
-        public void OnMove(InputAction.CallbackContext context)
-        {
-            onMoveValue = context.ReadValue<float>();
-            // movementVehicle.Move(context.ReadValue<float>());
-        }
+#region New Input System Interface
+        public void OnMove(InputAction.CallbackContext context) => onMoveValue = context.ReadValue<float>();
+        public void OnAccelerate(InputAction.CallbackContext context) => onAccelerateValue = context.ReadValue<float>();
+#endregion
 
+#region MonoBehaviour API
 		public void OnEnable()
 		{
 			if (controls == null)
@@ -34,8 +35,8 @@ namespace AlphaMiniGames
 
         private void Update() 
         {
-            movementVehicle.Move(onMoveValue);
+            movementVehicle.Move(onMoveValue, onAccelerateValue);
         }
-
     }
+#endregion
 }
